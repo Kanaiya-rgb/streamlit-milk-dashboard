@@ -5,6 +5,7 @@ from io import StringIO
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+# Google Sheet CSV export URL
 sheet_url = "https://docs.google.com/spreadsheets/d/1tAnw43L2nrF-7wGqqppF51w6tE8w42qhmPKSXBO3fmo/export?format=csv&gid=725446854"
 col_name = "How much milk received? (ml/Liters)"
 
@@ -24,7 +25,7 @@ df = load_data()
 if df.empty:
     st.stop()
 
-st.title("Milk Records Analysis")
+st.title("Milk Records Analysis Dashboard")
 
 # KPIs
 total_days = df.shape[0]
@@ -43,23 +44,23 @@ col4, col5 = st.columns(2)
 col4.metric("Average Daily Milk", f"{average_milk:.2f} ml")
 col5.metric("Total Pay", f"₹{total_pay:.2f}")
 
-# Month filter
+# Filter by Month
 st.subheader("Filter by Month")
 months = sorted(df['Month'].unique())
 selected_month = st.selectbox("Select Month", months)
 month_data = df[df['Month'] == selected_month]
 
-# Matplotlib Styling
 sns.set(style="whitegrid")
 
-# Milk received trend line plot
+# Line plot for daily milk received trend
 st.subheader("Daily Milk Received Trend")
 fig1, ax1 = plt.subplots(figsize=(10,4))
 sns.lineplot(data=month_data, x='Date of Record', y=col_name, marker='o', ax=ax1)
 ax1.set_ylabel("Milk (ml)")
+ax1.set_xlabel("Date")
 st.pyplot(fig1)
 
-# Milk Received? distribution bar plot
+# Bar plot for milk received quantity by status
 st.subheader("Milk Received Quantity by Status")
 fig2, ax2 = plt.subplots(figsize=(6,4))
 bar_data = month_data.groupby('Milk Received?')[col_name].sum().reset_index()
@@ -67,7 +68,7 @@ sns.barplot(x='Milk Received?', y=col_name, data=bar_data, palette='Set2', ax=ax
 ax2.set_ylabel("Total Milk (ml)")
 st.pyplot(fig2)
 
-# Milk Received? ratio pie chart
+# Pie chart for milk received ratio
 st.subheader("Milk Received Ratio")
 counts = month_data['Milk Received?'].value_counts()
 fig3, ax3 = plt.subplots()
