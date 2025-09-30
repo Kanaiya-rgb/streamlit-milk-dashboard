@@ -54,7 +54,7 @@ with summary_col:
 
 with charts_col:
     st.subheader("Daily Milk Received Trend")
-    fig1, ax1 = plt.subplots(figsize=(10,4))
+    fig1, ax1 = plt.subplots(figsize=(6,4))
     sns.lineplot(data=month_data, x='Date of Record', y=col_name, marker='o', ax=ax1)
     plt.xticks(rotation=45)
     plt.tight_layout()
@@ -75,14 +75,14 @@ with charts_col:
     st.pyplot(fig3)
 
     st.subheader("Milk Quantity Distribution")
-    fig4, ax4 = plt.subplots(figsize=(8,4))
+    fig4, ax4 = plt.subplots(figsize=(6,4))
     sns.histplot(month_data[col_name], bins=20, ax=ax4)
     plt.tight_layout()
     st.pyplot(fig4)
 
     st.subheader("Average Daily Milk per Date")
     avg_daily = month_data.groupby('Date of Record')[col_name].mean().reset_index()
-    fig5, ax5 = plt.subplots(figsize=(10,4))
+    fig5, ax5 = plt.subplots(figsize=(6,4))
     sns.scatterplot(data=avg_daily, x='Date of Record', y=col_name, ax=ax5)
     plt.xticks(rotation=45)
     plt.tight_layout()
