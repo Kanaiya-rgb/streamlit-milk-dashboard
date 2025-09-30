@@ -52,26 +52,29 @@ month_data = df[df['Month'] == selected_month]
 
 sns.set(style="whitegrid")
 
-# Line plot for daily milk received trend
+# Line plot for daily milk received trend with better layout
 st.subheader("Daily Milk Received Trend")
-fig1, ax1 = plt.subplots(figsize=(10,4))
+fig1, ax1 = plt.subplots(figsize=(12,6))
 sns.lineplot(data=month_data, x='Date of Record', y=col_name, marker='o', ax=ax1)
 ax1.set_ylabel("Milk (ml)")
 ax1.set_xlabel("Date")
+plt.xticks(rotation=45)
+plt.tight_layout()
 st.pyplot(fig1)
 
-# Bar plot for milk received quantity by status
+# Bar plot for milk received quantity by status with proper layout
 st.subheader("Milk Received Quantity by Status")
-fig2, ax2 = plt.subplots(figsize=(6,4))
+fig2, ax2 = plt.subplots(figsize=(8,5))
 bar_data = month_data.groupby('Milk Received?')[col_name].sum().reset_index()
 sns.barplot(x='Milk Received?', y=col_name, data=bar_data, palette='Set2', ax=ax2)
 ax2.set_ylabel("Total Milk (ml)")
+plt.tight_layout()
 st.pyplot(fig2)
 
-# Pie chart for milk received ratio
+# Pie chart for milk received ratio with balanced aspect ratio
 st.subheader("Milk Received Ratio")
 counts = month_data['Milk Received?'].value_counts()
-fig3, ax3 = plt.subplots()
+fig3, ax3 = plt.subplots(figsize=(6,6))
 ax3.pie(counts, labels=counts.index, autopct='%1.1f%%', colors=['#4CAF50','#F44336'], startangle=90)
 ax3.axis('equal')
 st.pyplot(fig3)
