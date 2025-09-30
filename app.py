@@ -22,40 +22,48 @@ def load_data():
     return df
 
 df = load_data()
-
 if df.empty:
     st.stop()
 
-st.title("Milk Records Live Dashboard")
+st.title("Milk Records Dashboard")
 
+# Overall KPIs with cards in 3 columns
+total_days = df.shape[0]
+milk_received_days = df[df['Milk Received?'] == 'Yes'].shape[0]
+total_milk = df[col_name].sum()
+average_milk = df[col_name].mean()
+total_pay = (total_milk / 500) * 32.5
+
+col1, col2, col3 = st.columns(3)
+col1.metric("Total Days Logged", total_days)
+col2.metric("Days Milk Received", milk_received_days)
+col3.metric("Total Milk Received (ml)", total_milk)
+
+col4, col5 = st.columns(2)
+col4.metric("Average Daily Milk (ml)", f"{average_milk:.2f}")
+col5.metric("Estimated Total Pay (₹)", f"{total_pay:.2f}")
+
+st.markdown("---")
+
+# Month selection for detailed view
 months = df['Month'].unique()
-selected_month = st.selectbox('Select Month', months)
+selected_month = st.selectbox('Select Month to see details', months)
 
 month_data = df[df['Month'] == selected_month]
 
-st.write(f"## Summary for Month: {selected_month}")
-st.write(month_data)
+st.subheader(f"Milk Records for Month: {selected_month}")
+st.dataframe(month_data)
 
-# Summary statistics
-total_days = month_data.shape[0]
-milk_received_days = month_data[month_data['Milk Received?'] == 'Yes'].shape[0]
-total_milk = month_data[col_name].sum()
-average_milk = month_data[col_name].mean()
-total_pay = (total_milk / 500) * 32.5
-
-st.write(f"Total Days: {total_days}")
-st.write(f"Milk Received Days: {milk_received_days}")
-st.write(f"Total Milk: {total_milk} ml")
-st.write(f"Average Daily Milk: {average_milk:.2f} ml")
-st.write(f"Total Pay: ₹{total_pay}")
-
-# Line chart of daily milk received
+# Daily Milk Received Line Chart
+st.markdown("### Daily Milk Received Trend")
 st.line_chart(month_data.set_index('Date of Record')[col_name])
 
-# Bar chart of milk received sum by Yes/No
+# Milk Received Yes/No Sum Bar Chart
+st.markdown("### Milk Received Quantity by Received Status")
 st.bar_chart(month_data.groupby('Milk Received?')[col_name].sum())
 
-# Pie chart for Milk Received? distribution
+# Milk Received Ratio Pie Chart
+st.markdown("### Milk Received Ratio (Yes / No)")
 counts = month_data['Milk Received?'].value_counts()
 fig, ax = plt.subplots()
 ax.pie(counts, labels=counts.index, autopct='%1.1f%%', colors=['green', 'red'])
