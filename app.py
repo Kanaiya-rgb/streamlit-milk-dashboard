@@ -70,7 +70,7 @@ with charts_col:
 
     st.subheader("Milk Received Ratio")
     counts = month_data['Milk Received?'].value_counts()
-    fig3, ax3 = plt.subplots(figsize=(6,6))
+    fig3, ax3 = plt.subplots(figsize=(6,3))
     ax3.pie(counts, labels=counts.index, autopct='%1.1f%%', colors=['#4CAF50','#F44336'], startangle=90)
     ax3.axis('equal')
     st.pyplot(fig3)
