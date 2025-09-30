@@ -1,7 +1,0 @@
-streamlit
-pandas
-requests
-matplotlib
-seaborn
-streamlit-aggrid
-python-dotenv
