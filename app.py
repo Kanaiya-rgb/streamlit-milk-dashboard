@@ -1,8 +1,11 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
 import requests
 from io import StringIO
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+st.set_page_config(layout="wide")
 
 sheet_url = "https://docs.google.com/spreadsheets/d/1tAnw43L2nrF-7wGqqppF51w6tE8w42qhmPKSXBO3fmo/export?format=csv&gid=725446854"
 col_name = "How much milk received? (ml/Liters)"
@@ -21,63 +24,66 @@ def load_data():
 
 df = load_data()
 if df.empty:
-    st.error("Error loading data or empty dataset.")
+    st.error("No data loaded")
     st.stop()
 
 st.title("🥛 Milk Records Interactive Dashboard")
 
-# Month filter and selection
 months = sorted(df['Month'].unique())
 selected_month = st.selectbox("Select Month", months)
 month_data = df[df['Month'] == selected_month]
 
-# KPIs in columns
-col1, col2, col3, col4, col5 = st.columns(5)
+sns.set(style="whitegrid")
 
-total_days = month_data.shape[0]
-milk_received_days = month_data[month_data['Milk Received?'] == 'Yes'].shape[0]
-total_milk = month_data[col_name].sum()
-average_milk = month_data[col_name].mean()
-total_pay = (total_milk / 500) * 32.5
+# Layout columns: summary (left), charts (right)
+summary_col, charts_col = st.columns([1, 3])
 
-col1.metric("Total Days", total_days)
-col2.metric("Milk Received Days", milk_received_days)
-col3.metric("Total Milk (ml)", total_milk)
-col4.metric("Avg Daily Milk (ml)", f"{average_milk:.2f}")
-col5.metric("Total Pay (₹)", f"{total_pay:.2f}")
+with summary_col:
+    st.header("Summary Metrics")
+    total_days = month_data.shape[0]
+    milk_received_days = month_data[month_data['Milk Received?'] == 'Yes'].shape[0]
+    total_milk = month_data[col_name].sum()
+    average_milk = month_data[col_name].mean()
+    total_pay = (total_milk / 500) * 32.5
 
-st.markdown("---")
+    st.metric("Total Days", total_days)
+    st.metric("Milk Received Days", milk_received_days)
+    st.metric("Total Milk (ml)", total_milk)
+    st.metric("Average Daily Milk (ml)", f"{average_milk:.2f}")
+    st.metric("Estimated Total Pay (₹)", f"{total_pay:.2f}")
 
-# Chart 1: Daily Milk Trend
-fig1 = px.line(month_data, x='Date of Record', y=col_name,
-               title='Daily Milk Received Trend', markers=True)
-st.plotly_chart(fig1, use_container_width=True)
+with charts_col:
+    st.subheader("Daily Milk Received Trend")
+    fig1, ax1 = plt.subplots(figsize=(10,4))
+    sns.lineplot(data=month_data, x='Date of Record', y=col_name, marker='o', ax=ax1)
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    st.pyplot(fig1)
 
-# Chart 2: Milk Received Quantity by Status
-status_sum = month_data.groupby('Milk Received?')[col_name].sum().reset_index()
-fig2 = px.bar(status_sum, x='Milk Received?', y=col_name,
-              title='Milk Received Quantity by Status', color='Milk Received?')
-st.plotly_chart(fig2, use_container_width=True)
+    st.subheader("Milk Received Quantity by Status")
+    fig2, ax2 = plt.subplots(figsize=(6,4))
+    status_sum = month_data.groupby('Milk Received?')[col_name].sum().reset_index()
+    sns.barplot(x='Milk Received?', y=col_name, data=status_sum, palette='Set2', ax=ax2)
+    plt.tight_layout()
+    st.pyplot(fig2)
 
-# Chart 3: Milk Received Ratio Pie Chart
-status_counts = month_data['Milk Received?'].value_counts().reset_index()
-status_counts.columns = ['Milk Received?', 'Count']
-fig3 = px.pie(status_counts, names='Milk Received?', values='Count',
-              title='Milk Received Ratio', color='Milk Received?')
-st.plotly_chart(fig3, use_container_width=True)
+    st.subheader("Milk Received Ratio")
+    counts = month_data['Milk Received?'].value_counts()
+    fig3, ax3 = plt.subplots()
+    ax3.pie(counts, labels=counts.index, autopct='%1.1f%%', colors=['#4CAF50','#F44336'], startangle=90)
+    ax3.axis('equal')
+    st.pyplot(fig3)
 
-# Chart 4: Milk Received Quantity Histogram
-fig4 = px.histogram(month_data, x=col_name, nbins=20,
-                    title='Milk Quantity Distribution')
-st.plotly_chart(fig4, use_container_width=True)
+    st.subheader("Milk Quantity Distribution")
+    fig4, ax4 = plt.subplots(figsize=(8,4))
+    sns.histplot(month_data[col_name], bins=20, ax=ax4)
+    plt.tight_layout()
+    st.pyplot(fig4)
 
-# Chart 5: Milk Received Days vs Not Received Days (Count)
-fig5 = px.bar(status_counts, x='Milk Received?', y='Count',
-              title='Milk Received Day Count', color='Milk Received?')
-st.plotly_chart(fig5, use_container_width=True)
-
-# Chart 6: Average Daily Milk per Date
-avg_daily = month_data.groupby('Date of Record')[col_name].mean().reset_index()
-fig6 = px.scatter(avg_daily, x='Date of Record', y=col_name,
-                  title='Average Daily Milk Per Date')
-st.plotly_chart(fig6, use_container_width=True)
+    st.subheader("Average Daily Milk per Date")
+    avg_daily = month_data.groupby('Date of Record')[col_name].mean().reset_index()
+    fig5, ax5 = plt.subplots(figsize=(10,4))
+    sns.scatterplot(data=avg_daily, x='Date of Record', y=col_name, ax=ax5)
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    st.pyplot(fig5)
