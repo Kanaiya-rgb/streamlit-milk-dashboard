@@ -1,13 +1,20 @@
 import streamlit as st
 import pandas as pd
 
-# Google Sheet CSV export link - replace YOUR_SHEET_ID & GID 0 if needed
+# Google Sheet ka CSV export URL (apne Sheet ID se replace karein)
 sheet_url = "https://docs.google.com/spreadsheets/d/1tAnw43L2nrF-7wGqqppF51w6tE8w42qhmPKSXBO3fmo/edit?usp=sharing"
 
 @st.cache_data(ttl=600)
 def load_data():
     df = pd.read_csv(sheet_url)
-    df['How much milk received? (ml/Liters)'] = df['How much milk received? (ml/Liters)'].str.replace('ml', '').astype(int)
+    df.columns = df.columns.str.strip()  # Extra spaces hatao
+    st.write("Columns from Sheet:", df.columns.tolist())  # Columns dikhayega debug ke liye
+    # Convert paper milk amount column ko integer me convert karo
+    col_name = 'How much milk received? (ml/Liters)'
+    if col_name in df.columns:
+        df[col_name] = df[col_name].str.replace('ml', '').str.strip().astype(int)
+    else:
+        st.error(f"Column '{col_name}' not found!")
     df['Date of Record'] = pd.to_datetime(df['Date of Record'])
     return df
 
@@ -15,8 +22,8 @@ df = load_data()
 
 st.title("Milk Records Live Dashboard")
 
-month_options = df['Month'].unique()
-selected_month = st.selectbox('Select Month', month_options)
+months = df['Month'].unique()
+selected_month = st.selectbox('Select Month', months)
 
 month_data = df[df['Month'] == selected_month]
 
