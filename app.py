@@ -3,7 +3,7 @@ import pandas as pd
 import requests
 from io import StringIO
 
-sheet_url = "https://docs.google.com/spreadsheets/d/1tAnw43L2nrF-7wGqqppF51w6tE8w42qhmPKSXBO3fmo/export?format=csv&gid=0"
+sheet_url = "https://docs.google.com/spreadsheets/d/1tAnw43L2nrF-7wGqqppF51w6tE8w42qhmPKSXBO3fmo/export?format=csv&gid=725446854"
 
 @st.cache_data(ttl=600)
 def load_data():
