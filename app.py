@@ -1,21 +1,24 @@
 import streamlit as st
 import pandas as pd
+import requests
+from io import StringIO
 
-# Google Sheet ka correct CSV export URL (apne sheet ka ID use karein)
 sheet_url = "https://docs.google.com/spreadsheets/d/1tAnw43L2nrF-7wGqqppF51w6tE8w42qhmPKSXBO3fmo/export?format=csv&gid=0"
 
 @st.cache_data(ttl=600)
 def load_data():
-    df = pd.read_csv(sheet_url)
+    response = requests.get(sheet_url)
+    response.raise_for_status()  # agar kuch error ho toh exception ayega
+    data = StringIO(response.text)
+    df = pd.read_csv(data)
     df.columns = df.columns.str.strip()
-    
-    # 'How much milk received? (ml/Liters)' me 'ml' hatakar integer conversion
+
     col_name = "How much milk received? (ml/Liters)"
     if col_name in df.columns:
         df[col_name] = df[col_name].str.replace('ml', '').str.strip().astype(int)
     else:
         st.error(f"Column '{col_name}' not found!")
-    
+
     df['Date of Record'] = pd.to_datetime(df['Date of Record'])
     return df
 
@@ -33,7 +36,7 @@ st.write(month_data)
 
 total_days = month_data.shape[0]
 milk_received_days = month_data[month_data['Milk Received?'] == 'Yes'].shape[0]
-total_milk = month_data["How much milk received? (ml/Liters)"].sum()
+total_milk = month_data[col_name].sum()
 total_pay = (total_milk / 500) * 32.5
 
 st.write(f"Total Days: {total_days}")
@@ -41,4 +44,4 @@ st.write(f"Milk Received Days: {milk_received_days}")
 st.write(f"Total Milk: {total_milk} ml")
 st.write(f"Total Pay: ₹{total_pay}")
 
-st.line_chart(month_data.set_index('Date of Record')["How much milk received? (ml/Liters)"])
+st.line_chart(month_data.set_index('Date of Record')[col_name])
