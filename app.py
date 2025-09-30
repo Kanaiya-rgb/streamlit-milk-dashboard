@@ -82,7 +82,7 @@ with charts_col:
 
     st.subheader("Average Daily Milk per Date")
     avg_daily = month_data.groupby('Date of Record')[col_name].mean().reset_index()
-    fig5, ax5 = plt.subplots(figsize=(6,4))
+    fig5, ax5 = plt.subplots(figsize=(2,4))
     sns.scatterplot(data=avg_daily, x='Date of Record', y=col_name, ax=ax5)
     plt.xticks(rotation=45)
     plt.tight_layout()
