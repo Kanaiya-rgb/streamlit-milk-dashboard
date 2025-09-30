@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # Google Sheet ka correct CSV export URL (apne sheet ka ID use karein)
-sheet_url = "https://docs.google.com/spreadsheets/d/1tAnw43L2nrF-7wGqqppF51w6tE8w42qhmPKSXBO3fmo/edit?usp=sharing"
+sheet_url = "https://docs.google.com/spreadsheets/d/1tAnw43L2nrF-7wGqqppF51w6tE8w42qhmPKSXBO3fmo/export?format=csv&gid=0"
 
 @st.cache_data(ttl=600)
 def load_data():
