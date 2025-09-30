@@ -5,24 +5,30 @@ from io import StringIO
 
 sheet_url = "https://docs.google.com/spreadsheets/d/1tAnw43L2nrF-7wGqqppF51w6tE8w42qhmPKSXBO3fmo/export?format=csv&gid=725446854"
 
+col_name = "How much milk received? (ml/Liters)"  # Global variable
+
 @st.cache_data(ttl=600)
 def load_data():
-    response = requests.get(sheet_url)
-    response.raise_for_status()  # agar kuch error ho toh exception ayega
-    data = StringIO(response.text)
-    df = pd.read_csv(data)
-    df.columns = df.columns.str.strip()
-
-    col_name = "How much milk received? (ml/Liters)"
-    if col_name in df.columns:
-        df[col_name] = df[col_name].str.replace('ml', '').str.strip().astype(int)
-    else:
-        st.error(f"Column '{col_name}' not found!")
-
-    df['Date of Record'] = pd.to_datetime(df['Date of Record'])
-    return df
+    try:
+        response = requests.get(sheet_url)
+        response.raise_for_status()
+        data = StringIO(response.text)
+        df = pd.read_csv(data)
+        df.columns = df.columns.str.strip()
+        if col_name in df.columns:
+            df[col_name] = df[col_name].str.replace('ml', '').str.strip().astype(int)
+        else:
+            st.error(f"Column '{col_name}' not found!")
+        df['Date of Record'] = pd.to_datetime(df['Date of Record'])
+        return df
+    except Exception as e:
+        st.error(f"Error fetching data: {e}")
+        return pd.DataFrame()
 
 df = load_data()
+
+if df.empty:
+    st.stop()
 
 st.title("Milk Records Live Dashboard")
 
