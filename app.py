@@ -143,13 +143,17 @@ kpi3.metric("📈 Forecasted Total", f"{forecast/1000:.2f} L", help="Estimated t
 st.markdown("---")
 st.subheader("Smart Insights")
 month_data['weekday_name'] = month_data['Date of Record'].dt.day_name()
-weekday_avg = month_data.groupby('weekday_name')[col_name].mean()
-peak_day = weekday_avg.idxmax()
+# Calculate average only on days milk was received (consumption > 0)
+weekday_avg = month_data[month_data[col_name] > 0].groupby('weekday_name')[col_name].mean()
+peak_day = weekday_avg.idxmax() if not weekday_avg.empty else "N/A"
 missed_days = len(month_data[month_data['Milk Received?'] == 'No'])
 
 insight1, insight2 = st.columns(2)
 with insight1:
-    st.info(f"**Peak Consumption Day:** You tend to consume the most milk on **{peak_day}s**.")
+    if peak_day != "N/A":
+        st.info(f"**Peak Consumption Day:** On days you received milk, your average intake was highest on **{peak_day}s**.")
+    else:
+        st.info("**Peak Consumption Day:** No milk received this month to analyze.")
 with insight2:
     st.warning(f"**Missed Days:** You missed receiving milk on **{missed_days}** days this month.")
 
@@ -175,6 +179,7 @@ with left_col:
 
 with right_col:
     st.subheader("Consumption by Day")
+    # Use the same filtered average for the chart
     weekday_avg_df = weekday_avg.reindex(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']).reset_index()
     fig_weekday = px.bar(weekday_avg_df, x='weekday_name', y=col_name, labels={'weekday_name': 'Day', col_name: 'Avg Milk (ml)'}, text_auto='.0f')
     fig_weekday.update_layout(height=400, template=theme['plotly_template'])
