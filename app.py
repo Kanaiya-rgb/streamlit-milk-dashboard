@@ -14,8 +14,9 @@ st.set_page_config(
 @st.cache_data(ttl=600) # Cache data for 10 minutes
 def load_data():
     """Loads and cleans the Milk Records data from a Google Sheet URL."""
-    # This is the specific URL for your milk data sheet
-    sheet_url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ5Jg2uYg_QT7s_257Jn2yOF_4s-nC9gp-s_--T-uymf0D5u-1QIM5m05wYACk2-0tW4xFg-p-t3FzD/pub?gid=0&single=true&output=csv'
+    # This is the CORRECTLY formatted URL for CSV export from the sheet you provided.
+    sheet_url = 'https://docs.google.com/spreadsheets/d/1tAnw43L2nrF-7wGqqppF51w6tE8w42qhmPKSXBO3fmo/export?format=csv'
+    
     df = pd.read_csv(sheet_url)
     df.columns = df.columns.str.strip()
     col_name = "How much milk received? (ml/Liters)"
@@ -35,11 +36,11 @@ try:
     df = load_data()
 except Exception as e:
     st.error(f"Error loading data from Google Sheet: {e}")
-    st.info("Please ensure the Google Sheet is public and the URL is correct.")
+    st.info("Please ensure the Google Sheet's sharing setting is 'Anyone with the link can view'.")
     st.stop()
 
 if df.empty:
-    st.error("No data could be loaded from the Google Sheet.")
+    st.error("No data could be loaded. The Google Sheet might be empty or in an incorrect format.")
     st.stop()
 
 st.title("🥛 Milk Records Interactive Dashboard")
@@ -61,7 +62,7 @@ if month_data.empty:
     st.stop()
 
 # --- Sidebar KPIs ---
-st.sidebar.header("Summary for " + selected_month)
+st.sidebar.header("Summary for " + str(selected_month))
 col_name = "How much milk received? (ml/Liters)"
 total_days = month_data.shape[0]
 milk_received_days = month_data[month_data['Milk Received?']=='Yes'].shape[0]
@@ -104,3 +105,4 @@ with col2:
     fig3 = px.bar(status_sum, x='Milk Received?', y=col_name, color='Milk Received?', color_discrete_map={'Yes':'#00B388', 'No':'#FF6B6B'}, template='plotly_white', text_auto='.2s')
     fig3.update_traces(textposition='outside')
     st.plotly_chart(fig3, use_container_width=True)
+
