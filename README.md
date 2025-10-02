@@ -16,12 +16,7 @@ An interactive Streamlit web application that tracks and analyzes daily milk con
 
 🔗 **[View Live Dashboard](https://app-milk-dashboard.streamlit.app/)**
 
-## 📸 Screenshots
-
-### Dashboard Overview
-![Dashboard](https://via.placeholder.com/800x400/1a1a1a/ffffff?text=Milk+Dashboard+Screenshot)
-
-### Key Metrics
+## 📊 Key Metrics
 - **Total Consumption**: Monthly milk consumption in liters
 - **Estimated Cost**: Calculated based on price per 500ml
 - **Forecasted Total**: Projected monthly consumption
