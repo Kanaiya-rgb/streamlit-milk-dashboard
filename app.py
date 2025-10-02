@@ -3,8 +3,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from calendar import month_name
-import numpy as np
-from datetime import datetime, timedelta
+from datetime import datetime
 
 # --- Page Configuration (MUST be the first Streamlit command) ---
 st.set_page_config(
@@ -63,6 +62,9 @@ st.markdown(f"""
     .css-1d391kg {{ /* Sidebar styling */
         background-color: {theme['main_bg_color']};
     }}
+    .stAlert {{
+        border-radius: 12px;
+    }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -82,14 +84,6 @@ def load_data():
     df['Month'] = df['Date of Record'].dt.month
     return df
 
-# --- Helper Functions ---
-def calculate_streaks(data):
-    """Calculates current and longest milk receiving streaks."""
-    streaks = data['Milk Received?'].eq('Yes').astype(int).groupby(data['Milk Received?'].ne('Yes').cumsum()).cumsum()
-    longest_streak = streaks.max()
-    current_streak = streaks.iloc[-1] if (not streaks.empty and data['Milk Received?'].iloc[-1] == 'Yes') else 0
-    return current_streak, longest_streak
-
 # --- Main App ---
 try:
     df = load_data()
@@ -106,6 +100,8 @@ selected_month_name = st.sidebar.selectbox("Select Month", available_month_names
 selected_month_num = list(month_map.keys())[list(month_map.values()).index(selected_month_name)]
 
 price_per_500ml = st.sidebar.number_input("Price per 500 ml (₹)", min_value=1.0, value=32.5, step=0.5)
+monthly_goal = st.sidebar.number_input("Monthly Goal (Liters)", min_value=1.0, value=15.0, step=0.5)
+goal_ml = monthly_goal * 1000
 
 # --- Data Filtering ---
 month_data = df[(df['Year'] == selected_year) & (df['Month'] == selected_month_num)].sort_values('Date of Record').copy()
@@ -123,72 +119,71 @@ total_pay = (total_milk / 500) * price_per_500ml
 # Month-over-Month Comparison
 prev_month_year, prev_month_num = (selected_year, selected_month_num - 1) if selected_month_num > 1 else (selected_year - 1, 12)
 prev_month_total_milk = int(df[(df['Year'] == prev_month_year) & (df['Month'] == prev_month_num)][col_name].sum())
-delta_milk = f"{((total_milk - prev_month_total_milk) / prev_month_total_milk) * 100:.1f}%" if prev_month_total_milk > 0 else "∞"
+delta_milk = f"{((total_milk - prev_month_total_milk) / prev_month_total_milk) * 100:.1f}%" if prev_month_total_milk > 0 else "N/A"
 
 # Forecast Calculation
-days_in_month = pd.Period(f'{selected_year}-{selected_month_num}-01').days_in_month
 days_passed = len(month_data)
 avg_daily = total_milk / days_passed if days_passed > 0 else 0
-forecast = avg_daily * days_in_month if avg_daily > 0 else 0
+forecast = avg_daily * pd.Period(f'{selected_year}-{selected_month_num}-01').days_in_month if avg_daily > 0 else 0
 
-# Streak Calculation
-current_streak, longest_streak = calculate_streaks(month_data)
+# --- Sidebar Goal Progress ---
+st.sidebar.markdown("---")
+st.sidebar.subheader("Goal Progress")
+progress = min(total_milk / goal_ml, 1.0) if goal_ml > 0 else 0
+st.sidebar.progress(progress)
+st.sidebar.markdown(f"**{total_milk/1000:.2f} L** of **{goal_ml/1000:.1f} L** goal achieved.")
 
 # --- Display KPIs ---
-kpi1, kpi2, kpi3, kpi4 = st.columns(4)
+kpi1, kpi2, kpi3 = st.columns(3)
 kpi1.metric("🍶 Total Consumed", f"{total_milk/1000:.2f} L", delta=delta_milk, help="Change vs. previous month.")
 kpi2.metric("💰 Estimated Cost", f"₹{total_pay:,.2f}")
 kpi3.metric("📈 Forecasted Total", f"{forecast/1000:.2f} L", help="Estimated total consumption for the month.")
-kpi4.metric("🔥 Current Streak", f"{current_streak} Days", help=f"Longest streak ever: {longest_streak} days")
+
+# --- Smart Insights Section ---
+st.markdown("---")
+st.subheader("Smart Insights")
+month_data['weekday_name'] = month_data['Date of Record'].dt.day_name()
+weekday_avg = month_data.groupby('weekday_name')[col_name].mean()
+peak_day = weekday_avg.idxmax()
+missed_days = len(month_data[month_data['Milk Received?'] == 'No'])
+
+insight1, insight2 = st.columns(2)
+with insight1:
+    st.info(f"**Peak Consumption Day:** You tend to consume the most milk on **{peak_day}s**.")
+with insight2:
+    st.warning(f"**Missed Days:** You missed receiving milk on **{missed_days}** days this month.")
+
 st.markdown("---")
 
-# --- Tabbed Layout ---
-tab1, tab2 = st.tabs(["🗓️ Monthly Calendar & Trends", "📊 Consumption Analysis"])
+# --- Charting Section ---
+left_col, right_col = st.columns((2,1))
 
-with tab1:
-    st.subheader("Monthly Consumption Heatmap")
-    month_data['weekday'] = month_data['Date of Record'].dt.dayofweek
-    month_data['week_of_month'] = (month_data['Date of Record'].dt.day - 1) // 7
-    calendar_data = month_data.pivot_table(index='week_of_month', columns='weekday', values=col_name, aggfunc='sum').fillna(0)
-    for i in range(7):
-        if i not in calendar_data.columns: calendar_data[i] = 0
-    calendar_data = calendar_data[[0,1,2,3,4,5,6]]
+with left_col:
+    st.subheader("Cumulative Consumption vs. Previous Month")
+    month_data['Cumulative'] = month_data[col_name].cumsum()
     
-    fig_cal = go.Figure(data=go.Heatmap(
-        z=calendar_data.values, x=['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-        y=[f"Week {i+1}" for i in calendar_data.index], colorscale='Greens',
-        hovertemplate='<b>Milk: %{z:.0f} ml</b><extra></extra>', showscale=False
-    ))
-    fig_cal.update_layout(template=theme['plotly_template'], height=300)
-    st.plotly_chart(fig_cal, use_container_width=True)
+    fig_progress = go.Figure()
+    fig_progress.add_trace(go.Scatter(x=month_data['Date of Record'].dt.day, y=month_data['Cumulative'], mode='lines+markers', name='Current Month', line=dict(color=theme['primary_color'], width=4)))
     
-    st.subheader("Daily Milk Received Trend")
-    fig_line = px.bar(month_data, x='Date of Record', y=col_name, labels={'Date of Record': 'Date', col_name: 'Milk (ml)'})
-    fig_line.update_traces(marker_color=theme['primary_color'])
-    fig_line.update_layout(template=theme['plotly_template'])
-    st.plotly_chart(fig_line, use_container_width=True)
+    prev_month_data = df[(df['Year'] == prev_month_year) & (df['Month'] == prev_month_num)].sort_values('Date of Record').copy()
+    if not prev_month_data.empty:
+        prev_month_data['Cumulative'] = prev_month_data[col_name].cumsum()
+        fig_progress.add_trace(go.Scatter(x=prev_month_data['Date of Record'].dt.day, y=prev_month_data['Cumulative'], mode='lines', name='Previous Month', line=dict(color='grey', dash='dash', width=2)))
+    
+    fig_progress.update_layout(template=theme['plotly_template'], height=400, legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1), xaxis_title="Day of Month")
+    st.plotly_chart(fig_progress, use_container_width=True)
 
-with tab2:
-    col1, col2 = st.columns(2)
-    with col1:
-        st.subheader("Milk Received Ratio")
-        status_count = month_data['Milk Received?'].value_counts().reset_index()
-        fig_pie = px.pie(status_count, names='Milk Received?', values='count', hole=0.6, color='Milk Received?', color_discrete_map={'Yes': theme['primary_color'], 'No': theme['secondary_color']})
-        fig_pie.update_traces(textposition='outside', textinfo='percent+label')
-        fig_pie.update_layout(showlegend=False, height=350, template=theme['plotly_template'])
-        st.plotly_chart(fig_pie, use_container_width=True)
-        
-    with col2:
-        st.subheader("Consumption by Day of Week")
-        month_data['weekday_name'] = month_data['Date of Record'].dt.day_name()
-        weekday_avg = month_data.groupby('weekday_name')[col_name].mean().reindex(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']).reset_index()
-        fig_weekday = px.bar(weekday_avg, x='weekday_name', y=col_name, labels={'weekday_name': 'Day', col_name: 'Avg Milk (ml)'}, text_auto='.0f')
-        fig_weekday.update_layout(height=350, template=theme['plotly_template'])
-        fig_weekday.update_traces(marker_color=theme['primary_color'])
-        st.plotly_chart(fig_weekday, use_container_width=True)
+with right_col:
+    st.subheader("Consumption by Day")
+    weekday_avg_df = weekday_avg.reindex(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']).reset_index()
+    fig_weekday = px.bar(weekday_avg_df, x='weekday_name', y=col_name, labels={'weekday_name': 'Day', col_name: 'Avg Milk (ml)'}, text_auto='.0f')
+    fig_weekday.update_layout(height=400, template=theme['plotly_template'])
+    fig_weekday.update_traces(marker_color=theme['primary_color'])
+    st.plotly_chart(fig_weekday, use_container_width=True)
 
-    st.markdown("---")
-    st.subheader("Raw Data for " + selected_month_name)
+# --- Raw Data Table ---
+st.markdown("---")
+with st.expander("Show Raw Data for " + selected_month_name):
     display_df = month_data[['Date of Record', 'Milk Received?', col_name]].sort_values(by='Date of Record', ascending=False).copy()
     display_df['Date of Record'] = display_df['Date of Record'].dt.strftime('%Y-%m-%d')
     st.dataframe(display_df, use_container_width=True, height=350)
