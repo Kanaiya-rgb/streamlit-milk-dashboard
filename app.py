@@ -205,7 +205,9 @@ with tab2:
         st.plotly_chart(fig_gauge, use_container_width=True)
         
         st.subheader("Raw Data for " + selected_month_name)
-        st.dataframe(month_data[['Date of Record', 'Milk Received?', col_name]].sort_values(by='Date of Record'), use_container_width=True, height=350)
+        display_df = month_data[['Date of Record', 'Milk Received?', col_name]].sort_values(by='Date of Record').copy()
+        display_df['Date of Record'] = display_df['Date of Record'].dt.strftime('%Y-%m-%d')
+        st.dataframe(display_df, use_container_width=True, height=350)
 
 with tab3:
     st.subheader(f"Year-over-Year Comparison for {selected_month_name}")
@@ -221,6 +223,3 @@ with tab3:
     else:
         st.info(f"Not enough data for a year-over-year comparison for {selected_month_name}. Data is only available for {selected_year}.")
 
-    st.subheader("Daily Consumption Over the Years")
-    fig_hist = px.histogram(historical_data, x='Date of Record', y=col_name, nbins=30, labels={'Date of Record': 'Date', col_name: 'Milk (ml)'}, title="Daily Milk Consumption Distribution")
-    fig_hist.update_layout(template=theme['plotly_template'], height=500)   
