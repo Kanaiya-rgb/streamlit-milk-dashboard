@@ -7,7 +7,7 @@ import plotly.express as px
 # Configure wide layout with page title & icon
 st.set_page_config(page_title="Milk Records Dashboard", page_icon="🥛", layout="wide")
 
-sheet_url = "https://docs.google.com/spreadsheets/d/1tAnw43L2nrF-7wGqqppF51w6tE8w42qhmPKSXBO3fmo/export?format=csv&gid=725446854"
+
 col_name = "How much milk received? (ml/Liters)"
 
 @st.cache_data(ttl=600)
