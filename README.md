@@ -1,17 +1,16 @@
-# streamlit-milk-dashboard
 🥛 Intelligent Milk Dashboard
 Ek smart aur interactive Streamlit dashboard jo aapke daily milk consumption, kharch, aur aadaton ko track aur analyze karta hai. Yeh dashboard Google Sheet se live data leta hai aur use behtareen charts aur insights mein badal deta hai.
 
-  <-- Yahan apni Streamlit App ka live link daalein
-
 Dashboard ka Ek Jhalak (Screenshots)
+Yeh demo screenshots hain. Jab aapke paas sheet mein aacha data ho jaaye, to aap inko apne actual dashboard ke screenshots se badal sakte hain.
+
 <p align="center">
 <b>Dark Mode 🌑</b>
 
 
 
 
-<img src="https://www.google.com/url?sa=E&source=gmail&q=https://i.imgur.com/your-dark-mode-screenshot.png" alt="Dark Mode Screenshot" width="80%">
+<img src="https://www.google.com/url?sa=E&source=gmail&q=https://i.imgur.com/2zZ0w8g.png" alt="Dark Mode Screenshot" width="80%">
 </p>
 <p align="center">
 <b>Light Mode ☀️</b>
@@ -19,9 +18,8 @@ Dashboard ka Ek Jhalak (Screenshots)
 
 
 
-<img src="https://www.google.com/url?sa=E&source=gmail&q=https://i.imgur.com/your-light-mode-screenshot.png" alt="Light Mode Screenshot" width="80%">
+<img src="https://www.google.com/url?sa=E&source=gmail&q=https://i.imgur.com/rN2J2f2.png" alt="Light Mode Screenshot" width="80%">
 </p>
-Note: Upar di gayi image links ko apne dashboard ke actual screenshots se replace karein.
 
 ✨ Features
 Interactive UI: Ek clean aur modern user interface jo istemal karne mein aasan hai.
@@ -123,4 +121,3 @@ Kanaiya
 
 GitHub: @Kanaiya-rgb
 
-Yeh project maine apne daily milk consumption ko track karne ke liye banaya hai.
