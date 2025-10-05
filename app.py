@@ -69,7 +69,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # --- Data Loading ---
-@st.cache_data(ttl=300)
+@st.cache_data(ttl=60)
 def load_data():
     """Loads and cleans the Milk Records data from a Google Sheet URL."""
     sheet_url = 'https://docs.google.com/spreadsheets/d/1tAnw43L2nrF-7wGqqppF51w6tE8w42qhmPKSXBO3fmo/export?format=csv'
